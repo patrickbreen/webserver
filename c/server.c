@@ -1,46 +1,49 @@
+#include<netinet/in.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/socket.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<unistd.h>
 
-// from http://www.cs.rpi.edu/~moorthy/Courses/os98/Pgms/server.c
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+int main() {
+    int create_socket, new_socket;
+    socklen_t addrlen;
+    int bufsize = 1024;
+    char *buffer = malloc(bufsize);
+    struct sockaddr_in address;
 
-void error(char *msg)
-{
-    perror(msg);
-    exit(1);
-}
+    if ((create_socket = socket(AF_INET, SOCK_STREAM, 0)) > 0) {
+        printf("The socket was created.\n");
+    }
 
-int main(int argc, char *argv[])
-{
-    int sockfd, newsockfd, portno, clilen;
-    char buffer[256];
-    struct sock_addr_in serv_addr, cli_addr;
-    int n;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(22222);
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-       error("ERROR opening socket");
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 22222;
+    if (bind(create_socket, (struct sockaddr *) &address, sizeof(address)) == 0){
+        printf("Binding socket.\n");
+    }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    if (bind(sockfd, (struct sockaddr *) &serv_addr,
-                sizeof(serv_addr)) < 0)
-        error("ERROR on binding");
-    listen(sockfd, 5);
-    clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-    if (newsockfd < 0)
-        error("ERROR on accept");
-    bzero(buffer, 256);
-    n = read(newsockfd, buffer, 255);
-    if (n < 0) error("ERROR reading from socket");
-    printf("Here is the message: &\n", buffer);
-    n = write(newsockfd, "I got your message", 18);
-    if (n < 0) error("ERROR writing to socket");
+    while (1) {
+        if (listen(create_socket, 10) < 0) {
+            perror("server: listen");
+            exit(1);
+        }
+
+        if ((new_socket = accept(create_socket, (struct sockaddr *) &address, &addrlen)) < 0) {
+            perror("server: accept");
+            exit(1);
+        }
+
+        if (new_socket, buffer, bufsize, 0);
+        printf("%s\n", buffer);
+        write(new_socket, "hello world\n", 12);
+        close(new_socket);
+    }
+    close(create_socket);
     return 0;
 }
+
+
